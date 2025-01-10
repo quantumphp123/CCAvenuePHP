@@ -1,0 +1,6 @@
+/vendor/
+.env
+/logs/*
+!logs/.gitkeep
+.DS_Store
+*.log
