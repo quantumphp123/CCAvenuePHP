@@ -16,69 +16,6 @@ class PaymentController extends Controller
         $this->paymentProcessor = new PaymentProcessor();
     }
 
-    public function processPayment()
-    {
-        try {
-            global $session;
-
-            // Validate CSRF
-            if (!$session->validateCSRFToken($_POST['csrf_token'])) {
-                throw new Exception('Invalid CSRF token');
-            }
-
-            $rules = [
-                'amount' => ['required', 'numeric', 'min:1'],
-                'currency' => ['required', 'string', 'in:INR,AUD,USD,GBP,CAD,EUR,SGD'],
-                'name' => ['required', 'string', 'min:2'],
-                'email' => ['required', 'email'],
-                'address1' => ['required', 'string'],
-                'country' => ['required', 'string'],
-                'zipcode' => ['required', 'string'],
-                'state' => ['required', 'string'],
-                'city' => ['required', 'string']
-            ];
-
-            $validator = new Validator($_POST, $rules);
-
-            if (!$validator->validate()) {
-                $errors = $validator->errors();
-                $firstError = reset($errors)[0];
-                throw new Exception($firstError);
-            }
-
-            $input = $validator->sanitized();
-
-            // Generate a unique order ID
-            $orderId = $this->generateOrderId();
-
-            $customerData = $this->transformInput($input);
-
-            // Create order in CCAvenue
-            $orderData = $this->paymentProcessor->createOrder(
-                $input['amount'],
-                $input['amount'],
-                'INR',
-                $input['currency'],
-                $orderId,
-                $customerData
-            );
-
-            jsonResponse([
-                'success' => true,
-                'iframe' => $this->renderPaymentForm($orderData)
-            ]);
-            exit;
-
-        } catch (Exception $e) {
-            $this->paymentProcessor->logError('Payment Processing Error', $e->getMessage());
-
-            jsonResponse([
-                'error' => 'Unable to process payment request'
-            ], 400);
-            exit;
-        }
-    }
-
     public function handleResponse()
     {
         try {
@@ -256,32 +193,5 @@ class PaymentController extends Controller
             'error_description' => $error_description,
             'payment_details' => $payment_details
         ]);
-    }
-
-    protected function prepareTransactionData($payment, $postData)
-    {
-        return [
-            'payment_id' => $postData['payment_id'],
-            'order_id' => $postData['order_id'],
-            'name' => $postData['name'],
-            'email' => $postData['email'],
-            'address' => $postData['address1'],
-            'address2' => $postData['address2'],
-            'city' => $postData['city'],
-            'state' => $postData['state'],
-            'country' => $postData['country'],
-            'zip_code' => $postData['zipcode'],
-            'amount' => $postData['amount'],
-            'currency_type' => $postData['currency'],
-            'status' => 'success',
-            'payment_method' => $payment['payment_details']['method'],
-            'card_network' => $payment['payment_details']['card']['network'] ?? null,
-            'card_last4' => $payment['payment_details']['card']['last4'] ?? null,
-            'card_issuer' => $payment['payment_details']['card']['issuer'] ?? null,
-            'card_type' => $payment['payment_details']['card']['type'] ?? null,
-            'bank_name' => $payment['payment_details']['bank'] ?? null,
-            'wallet_type' => $payment['payment_details']['wallet'] ?? null,
-            'vpa' => $payment['payment_details']['vpa'] ?? null,
-        ];
     }
 }
