@@ -1,31 +1,31 @@
-# Razorpay Integration in Core PHP
+# CCAvenue Integration in Core PHP
 
 ## Overview
 
-This is a **Core PHP** project for integrating the **Razorpay** payment gateway into a web application. It allows users to securely make payments, process orders, and verify transactions. This project is designed to be easily customizable for a variety of use cases, and it's equipped with features such as automatic address filling, region-based currency selection, and payment verification.
+This is a Core PHP project for integrating the CCAvenue payment gateway into a web application. It utilizes the non-seamless kit provided by CCAvenue and includes robust error handling for every possible scenario, along with decent styling for user interfaces. This project ensures secure payment transactions, proper error logging, and a customizable framework for diverse use cases.
 
 ## Features
 
 - **Automatic Address Autofill**: Automatically fills the user's address on the payment page from `localStorage` (if available).
 - **Region-Based Currency Selection**: Detects the user's region and selects the appropriate currency for the payment.
-- **Razorpay Payment Integration**: Handles creating orders, making payments, and verifying payments securely.
-- **Payment Failure Handling**: Logs payment errors and handles failed payments gracefully.
-- **Logging**: Tracks payment events and errors for monitoring and debugging purposes.
-- **Customizable**: Easy to adapt for any type of service or e-commerce platform using Razorpay.
+- **CCAvenue Payment Integration: Handles order creation, payment processing, and transaction verification securely using the non-seamless kit.
+- **Error Handling: Manages payment failures, API errors, and other scenarios with proper logging and user feedback.
+- **Customizable and Modular: Easily adaptable for e-commerce, service-based applications, or other use cases using CCAvenue.
+- **Logging: Tracks payment events and errors for monitoring and debugging.
 
 ## Requirements
 
 - PHP 7.4 or higher
 - Composer (for managing dependencies)
-- Razorpay API credentials (Key and Secret)
+- CCAvenue API credentials (Merchant ID, Access Code, and Working Key)
 - A web server with PHP support (e.g., Apache, Nginx)
 
 ## Setup Instructions
 
 1. **Clone the repository**:
     ```bash
-    git clone https://github.com/<your-username>/razorpay-integration.git
-    cd razorpay-integration
+    git clone https://github.com/<your-username>/ccavenue-integration.git
+    cd ccavenue-integration
     ```
 
 2. **Install dependencies**:
@@ -34,8 +34,8 @@ This is a **Core PHP** project for integrating the **Razorpay** payment gateway 
     ```
 
 3. **Configure Razorpay API**:
-    - In the project, you will need to set your Razorpay API keys (key and secret). These can be obtained from the Razorpay dashboard.
-    - Add your Razorpay credentials to your `.env` file.
+    - Obtain your CCAvenue Merchant ID, Access Code, and Working Key from the CCAvenue dashboard.
+    - Add these credentials to your .env file or directly to the configuration file (config/payment.php)..
 
 4. **Set up the database**:
     - The SQL for required tables can be found in `database/tables.sql`.
@@ -51,7 +51,7 @@ This is a **Core PHP** project for integrating the **Razorpay** payment gateway 
 
 ### Payment Verification:
 
-- After the payment is made, the server verifies the payment using the Razorpay API. It ensures that the transaction was successful before completing the order.
+- The server verifies the payment using CCAvenue's checksum method to ensure the integrity and success of the transaction before proceeding.
 
 ### Logging:
 
