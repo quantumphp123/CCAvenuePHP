@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use DateTime;
 use EmailService;
 use Exception;
 
@@ -172,8 +173,8 @@ class PaymentProcessor
             'country' => $data['billing_country'] ?? null,
             'amount' => $data['amount'] ?? 0,
             'currency_type' => $data['currency'] ?? 'INR',
-            'original_amount' => $orderDetails['original_amount'] ?? 0,
-            'original_currency' => $orderDetails['original_currency'] ?? 'INR',
+            'original_amount' => $orderDetails['order']['original_amount'] ?? 0,
+            'original_currency' => $orderDetails['order']['original_currency'] ?? 'INR',
             'bank_ref_no' => $data['bank_ref_no'] ?? null,
             'status' => $this->mapPaymentStatus($data['order_status'] ?? ''),
             'payment_method' => $data['payment_mode'],
@@ -181,7 +182,7 @@ class PaymentProcessor
             'transaction_fee' => $data['trans_fee'] ?? null,
             'service_tax' => $data['service_tax'] ?? null,
             'error_message' => $this->getErrorMessage($data),
-            'transaction_time' => $data['trans_date'] ?? date('Y-m-d H:i:s')
+            'transaction_time' => DateTime::createFromFormat('m/d/Y H:i:s', $data['trans_date'])->format('Y-m-d H:i:s') ?? date('Y-m-d H:i:s')
         ];
 
     }

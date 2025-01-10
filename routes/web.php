@@ -12,7 +12,6 @@ return function ($router) {
     $router->get('/', [PagesController::class, 'index']);
 
     $router->post('/create-order', [OrderController::class, 'create']);
-    $router->post('/ccav-request-handler', [PaymentController::class, 'processPayment']);
     $router->post('/ccav-response-handler', [PaymentController::class, 'handleResponse']);
     $router->post('/log-payment-event', [PaymentController::class, 'logPaymentEvent']);
     $router->get('/success', [PaymentController::class, 'success']);

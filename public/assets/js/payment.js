@@ -50,7 +50,7 @@ $(document).ready(function () {
                 // Create and submit the CCAvenue form
                 const form = $('<form>', {
                     method: 'POST',
-                    action: 'https://secure.ccavenue.com/transaction/transaction.do?command=initiateTransaction',
+                    action: response.transaction_url,
                     name: 'redirect',
                     style: 'display: none'
                 });

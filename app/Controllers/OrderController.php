@@ -69,7 +69,8 @@ class OrderController
             jsonResponse([
                 'success' => true,
                 'encrypted_data' => $orderData['encrypted_data'],
-                'access_code' => $orderData['access_code']
+                'access_code' => $orderData['access_code'],
+                'transaction_url' => $this->getTransactionUrl(),
             ]);
             exit;
 
@@ -125,6 +126,12 @@ class OrderController
 
         // Ensure it's not longer than 30 characters (CCAvenue limit)
         return substr($orderId, 0, 30);
+    }
+
+    public function getTransactionUrl()
+    {
+        $ccavenueUrl = $this->paymentProcessor->getUrl();
+        return $ccavenueUrl . '/transaction/transaction.do?command=initiateTransaction';
     }
 
     private function renderPaymentForm($orderData)
