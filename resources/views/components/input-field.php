@@ -10,8 +10,8 @@ function inputField($name, $id, $label, $type = 'text', $isRequired = false, $pl
 
     // Prepare the additional attributes (e.g., min, max, step) as a string for the input element
     $additionalAttributesString = '';
-    foreach ($additionalAttributes as $key => $value) {
-        $additionalAttributesString .= "$key=\"$value\" ";
+    foreach ($additionalAttributes as $key => $aValue) {
+        $additionalAttributesString .= "$key=\"$aValue\" ";
     }
 
     // Output the label and input field with all necessary attributes

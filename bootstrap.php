@@ -8,7 +8,11 @@ use App\Core\Session;
 use App\Middleware\RateLimiter\RateLimiter;
 
 require __DIR__ . '/vendor/autoload.php';
+
 define('VIEW_PATH', __DIR__ . '/resources/views/');
+
+// Define PUBLIC_PATH to point to the 'public' directory
+define('PUBLIC_PATH', __DIR__ . '/public');
 
 
 try {
