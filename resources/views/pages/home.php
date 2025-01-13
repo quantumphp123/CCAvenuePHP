@@ -1,4 +1,6 @@
 <?php
+
+use App\Services\CurrencyService;
 $pageTitle = "Payments | Quantum IT Innovation";
 include VIEW_PATH . 'layouts/layout.php';
 include VIEW_PATH . 'components/input-field.php';
@@ -102,7 +104,7 @@ include VIEW_PATH . 'components/input-field.php';
         <!-- Payment Details -->
         <div class="border-t pt-4 mt-4">
             <h2 class="text-lg font-semibold mb-4">Payment Details</h2>
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-2 gap-4 mb-8">
                 <div>
                     <?php inputField('amount', 'amount', 'Amount', 'number', true, 'Enter amount', '', '', ['min' => '1']); ?>
                 </div>
@@ -120,14 +122,64 @@ include VIEW_PATH . 'components/input-field.php';
                     </select>
                 </div>
             </div>
-        </div>
+            <div>
+                <div class="flex items-end space-x-2">
+                    <div>
+                        <?php inputField('amount_inr', 'amount_inr', 'Amount(' . (new CurrencyService)->baseCurrency . ')', 'text', false, 'Converted amount will be shown here...', '', 'bg-gray-200', ['disabled' => true, 'readonly' => true]); ?>
+                    </div>
 
+                    <!-- Info Button with Improved Positioning -->
+                    <button id="info-button"
+                        class="relative inline-flex items-center justify-center w-6 h-6 text-gray-400 hover:text-blue-700 transition-colors duration-200 rounded-full hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        aria-label="Currency conversion information">
+                        <i class="bi bi-info-circle text-xl"></i>
+                    </button>
+                </div>
+                <!-- Enhanced Popover -->
+                <div id="popover"
+                    class="hidden absolute right-0 w-96 max-w-[calc(100vw-2rem)] md:max-w-fit bg-white rounded-lg shadow-xl ring-1 ring-black ring-opacity-5 p-3 z-50">
+                    <div class="flex flex-col space-y-4">
+                        <div class="border-b pb-3">
+                            <h3 class="text-xs font-semibold text-gray-900">Conversion Information</h3>
+                            <p class="mt-1 text-xs text-gray-500">Important details about currency conversion</p>
+                        </div>
+
+                        <ul class="space-y-1 text-xs text-gray-600">
+                            <li class="flex items-start">
+                                <span class="flex-shrink-0 w-5 h-5 text-blue-600 mr-2">•</span>
+                                <span>Amounts are automatically converted to INR before processing</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="flex-shrink-0 w-5 h-5 text-blue-600 mr-2">•</span>
+                                <span>Conversion rates are updated regularly and subject to policy changes</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="flex-shrink-0 w-5 h-5 text-blue-600 mr-2">•</span>
+                                <span>Additional fees may apply to currency conversion transactions</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="flex-shrink-0 w-5 h-5 text-blue-600 mr-2">•</span>
+                                <span>Rates fetched are based on the latest available data</span>
+                            </li>
+                        </ul>
+
+                        <!-- Conversion Chart Container -->
+                        <div id="conversion-chart" class="mt-4 border-t pt-4">
+                            <!-- Chart will be inserted here by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         <button type="submit"
             class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors">
             Proceed to Payment
         </button>
     </form>
 </div>
+<script>
+const APP_URL = "<?php echo $GLOBALS['config']->get('app')['url']; ?>";
+</script>
 <?php
 $pageScripts = [
     '/assets/js/payment.js',

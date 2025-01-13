@@ -31,7 +31,6 @@ function redirect(string $url, array $queryParams = [], int $statusCode = 303): 
     Redirect::to($url, $queryParams, $statusCode);
 }
 
-
 function dd($value)
 {
     echo "<pre>";
@@ -80,7 +79,6 @@ function isHtmlRequest(): bool
 {
     return strpos($_SERVER['HTTP_ACCEPT'], 'text/html') !== false;
 }
-
 
 /**
  * Get error title based on the status code

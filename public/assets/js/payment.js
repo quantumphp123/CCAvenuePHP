@@ -13,9 +13,98 @@ window.addEventListener('load', function () {
         document.getElementById('country').value = address.country || '';
     }
 });
+class CurrencyConverter {
+    constructor(refreshInterval = 5 * 60 * 1000) { // 5 minutes default
+        this.rates = null;
+        this.lastFetchTime = null;
+        this.refreshInterval = refreshInterval;
+        this.initialize();
+    }
+
+    async initialize() {
+        await this.fetchRates();
+    }
+
+    async fetchRates() {
+        try {
+            const response = await fetch(APP_URL + '/json/currency.json');
+            this.rates = await response.json();
+            // Add INR with rate 1
+            this.rates.INR = 1;
+            this.lastFetchTime = Date.now();
+            // Store in localStorage as backup
+            localStorage.setItem('exchangeRates', JSON.stringify({
+                rates: this.rates,
+                timestamp: this.lastFetchTime
+            }));
+        } catch (error) {
+            console.error('Error fetching rates:', error);
+            // Try to load from localStorage if fetch fails
+            const cached = localStorage.getItem('exchangeRates');
+            if (cached) {
+                const { rates, timestamp } = JSON.parse(cached);
+                this.rates = rates;
+                this.lastFetchTime = timestamp;
+            }
+        }
+    }
+
+    async getRates() {
+        // Check if rates need refresh
+        if (!this.rates || !this.lastFetchTime ||
+            Date.now() - this.lastFetchTime > this.refreshInterval) {
+            await this.fetchRates();
+        }
+        return this.rates;
+    }
+
+    async convert(amount, toCurrency) {
+        const rates = await this.getRates();
+        if (!rates) return null;
+
+        // Convert from INR to target currency
+        return amount * rates[toCurrency];
+    }
+}
 
 $(document).ready(function () {
+
+    const converter = new CurrencyConverter();
+    let timeoutId;
+
+    // Cache DOM elements
+    const amountInput = $('#amount');
+    const currencySelect = $('#currency');
+    const amountInrInput = $('#amount_inr');
+    // Elements
+    const infoButton = document.getElementById('info-button');
+    const popover = document.getElementById('popover');
+    const conversionChartElement = document.getElementById('conversion-chart');
+
     setCurrency();
+
+    // Handle amount input with debounce
+    amountInput.on('input', function () {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(convertAmount, 300); // Debounce for 300ms
+    });
+
+    // Handle currency change
+    currencySelect.on('change', convertAmount);
+
+    async function convertAmount() {
+        const amount = parseFloat(amountInput.val()) || 0;
+        const currency = currencySelect.val();
+
+        if (amount && currency) {
+            const amountInInr = await converter.convert(amount, currency, 'INR');
+            if (amountInInr !== null) {
+                amountInrInput.val(amountInInr.toFixed(2));
+            }
+        } else {
+            amountInrInput.val('');
+        }
+    }
 
     $('#payment-form').on('submit', function (e) {
         e.preventDefault();
@@ -79,21 +168,6 @@ $(document).ready(function () {
                     form.remove();
                     hideLoadingOverlay(loadingOverlay);
                 }, 1000);
-
-                // // Create modal/container for iframe
-                // const modal = $('<div>').addClass('payment-modal')
-                //     .append($('<div>').addClass('payment-iframe-container')
-                //         .append(response.iframe));
-
-                // // Add modal to body
-                // $('body').append(modal);
-
-                // // Setup iframe height listener
-                // window.addEventListener('message', function (e) {
-                //     $("#paymentFrame").css("height", e.data['newHeight'] + 'px');
-                // }, false);
-
-                // hideLoadingOverlay(loadingOverlay);
             },
             error: function (xhr, status, error) {
                 handleError('Error creating order: ' + error);
@@ -265,4 +339,125 @@ $(document).ready(function () {
         }
 
     }
+    // Enhanced conversion chart generation
+    async function generateConversionChart() {
+        try {
+            const rates = await converter.getRates();
+
+            let chartHtml = `
+            <div class="overflow-hidden">
+                <h4 class="text-xs font-semibold text-gray-900 mb-3">Current Exchange Rates</h4>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead>
+                            <tr class="bg-gray-50">
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Currency</th>
+                                <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+        `;
+
+            Object.entries(rates).forEach(([currency, rate], index) => {
+                chartHtml += `
+                <tr class="${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}">
+                    <td class="px-3 py-2 text-xs text-gray-900">${currency}</td>
+                    <td class="px-3 py-2 text-xs text-gray-900 text-right">${Number(rate).toFixed(2)}</td>
+                </tr>
+            `;
+            });
+
+            chartHtml += `
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+
+            document.getElementById('conversion-chart').innerHTML = chartHtml;
+        } catch (error) {
+            console.error('Error generating conversion chart:', error);
+            document.getElementById('conversion-chart').innerHTML = `
+            <div class="text-sm text-red-600">
+                Unable to load current exchange rates. Please try again later.
+            </div>
+        `;
+        }
+    }
+
+    // Initialize the chart
+    generateConversionChart();
+
+    function positionPopover() {
+        const buttonRect = infoButton.getBoundingClientRect();
+        const popoverRect = popover.getBoundingClientRect();
+        const viewport = {
+            width: window.innerWidth,
+            height: window.innerHeight
+        };
+
+        // Calculate initial position (above the button)
+        let top = buttonRect.top - popoverRect.height - 10;
+        let left = Math.min(
+            buttonRect.left + (buttonRect.width / 2) - (popoverRect.width / 2),
+            viewport.width - popoverRect.width - 16 // 16px margin from viewport edge
+        );
+
+        // Ensure popover doesn't go off-screen
+        left = Math.max(16, left); // Keep 16px margin from left edge
+
+        // If popover would go above viewport, position it below the button instead
+        if (top < 16) {
+            top = buttonRect.bottom + 10;
+        }
+
+        popover.style.top = `${top}px`;
+        popover.style.left = `${left}px`;
+    }
+
+    // Toggle popover with improved positioning
+    infoButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const isHidden = popover.classList.contains('hidden');
+
+        if (isHidden) {
+            popover.classList.remove('hidden');
+            positionPopover();
+            // Add transition after positioning
+            requestAnimationFrame(() => {
+                popover.style.opacity = '1';
+                popover.style.transform = 'scale(1)';
+            });
+        } else {
+            hidePopover();
+        }
+    });
+
+    function hidePopover() {
+        popover.style.opacity = '0';
+        popover.style.transform = 'scale(0.95)';
+        setTimeout(() => popover.classList.add('hidden'), 200);
+    }
+
+    // Close popover on outside click or escape key
+    document.addEventListener('click', (e) => {
+        if (!popover.contains(e.target) && !infoButton.contains(e.target)) {
+            hidePopover();
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            hidePopover();
+        }
+    });
+
+    // Reposition popover on window resize
+    window.addEventListener('resize', () => {
+        if (!popover.classList.contains('hidden')) {
+            positionPopover();
+        }
+    });
 });

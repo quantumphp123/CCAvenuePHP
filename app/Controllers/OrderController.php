@@ -6,15 +6,18 @@ namespace App\Controllers;
 
 use App\Services\PaymentProcessor;
 use App\Core\Validator;
+use App\Services\CurrencyService;
 use Exception;
 
 class OrderController
 {
     private $paymentProcessor;
+    private $currencyService;
 
     public function __construct()
     {
         $this->paymentProcessor = new PaymentProcessor();
+        $this->currencyService = new CurrencyService();
     }
 
     public function create(): void
@@ -29,7 +32,7 @@ class OrderController
 
             $rules = [
                 'amount' => ['required', 'numeric', 'min:1'],
-                'currency' => ['required', 'string', 'in:INR,AUD,USD,GBP,CAD,EUR,SGD'],
+                'currency' => ['required', 'string', 'in:' . $this->currencyService->getValidationRulesArray()],
                 'name' => ['required', 'string', 'min:2'],
                 'email' => ['required', 'email'],
                 'tel' => ['string'],
@@ -56,11 +59,21 @@ class OrderController
 
             $customerData = $this->transformInput($input);
 
+            // Convert amount to INR if needed
+            $amountInInr = $this->currencyService->convert(
+                (float) $input['amount'],
+                $input['currency']
+            );
+
+            if ($amountInInr === null) {
+                throw new Exception('Currency conversion failed');
+            }
+
             // Create order in CCAvenue
             $orderData = $this->paymentProcessor->createOrder(
+                $amountInInr,
                 $input['amount'],
-                $input['amount'],
-                'INR',
+                $this->currencyService->baseCurrency,
                 $input['currency'],
                 $orderId,
                 $customerData
@@ -72,15 +85,12 @@ class OrderController
                 'access_code' => $orderData['access_code'],
                 'transaction_url' => $this->getTransactionUrl(),
             ]);
-            exit;
-
         } catch (Exception $e) {
             $this->paymentProcessor->logError('Payment Processing Error', $e->getMessage());
-
+            info('Payment Processing Error: ' . $e->getMessage());
             jsonResponse([
                 'error' => 'Unable to process payment request'
             ], 400);
-            exit;
         }
     }
 
@@ -116,7 +126,7 @@ class OrderController
     {
         // Get current timestamp in microseconds
         $timestamp = microtime(true);
-        $timestampStr = str_replace('.', '', (string)$timestamp);
+        $timestampStr = str_replace('.', '', (string) $timestamp);
 
         // Add a random component
         $random = mt_rand(100, 999);
@@ -132,39 +142,5 @@ class OrderController
     {
         $ccavenueUrl = $this->paymentProcessor->getUrl();
         return $ccavenueUrl . '/transaction/transaction.do?command=initiateTransaction';
-    }
-
-    private function renderPaymentForm($orderData)
-    {
-        // Get the CCAvenue production URL from config
-        $ccavenueUrl = $this->paymentProcessor->getUrl();
-
-        $iframeUrl = $ccavenueUrl . '/transaction/transaction.do?command=initiateTransaction&encRequest=' .
-            $orderData['encrypted_data'] . '&access_code=' . $orderData['access_code'];
-
-        $iframeHtml = '<iframe src="' . htmlspecialchars($iframeUrl) . '" ' .
-            'id="paymentFrame" width="482" height="450" frameborder="0" scrolling="No"></iframe>';
-
-        return $iframeHtml;
-
-        // Output the form
-//         echo <<<HTML
-//         <!DOCTYPE html>
-//         <html>
-//         <head>
-//             <title>Processing Payment...</title>
-//         </head>
-//         <body>
-//             <center>
-//                 <form method="post" name="redirect" action="{$ccavenueUrl}">
-//                     <input type="hidden" name="encRequest" value="{$orderData['encrypted_data']}">
-//                     <input type="hidden" name="access_code" value="{$orderData['access_code']}">
-//                     <script>document.redirect.submit();</script>
-//                 </form>
-//             </center>
-//         </body>
-//         </html>
-// HTML;
-//         exit;
     }
 }
