@@ -83,7 +83,16 @@ switch ($status) {
                     </div>
                 </div>
             </div>
-
+            <?php if ($data['transaction']['error_message']) { ?>
+            <div class="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                <div>
+                    <p class="text-sm text-gray-500">Message</p>
+                    <p class="font-mono text-sm">
+                        <?php echo htmlspecialchars($data['transaction']['error_message']); ?>
+                    </p>
+                </div>
+            </div>
+            <?php } ?>
             <!-- Action Buttons -->
             <div class="flex items-center justify-center space-x-4">
                 <a href="<?php echo $GLOBALS['config']->get('app')['url']; ?>"
