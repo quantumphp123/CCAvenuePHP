@@ -150,6 +150,7 @@ class PaymentController extends Controller
         $transactionData = (new PaymentProcessor)->getTransactionDetails($input['order_id']);
 
         if (!$transactionData) {
+            info('Transaction Not found in success');
             Redirect::to($GLOBALS['config']->get('app')['url']);
         }
 
@@ -158,40 +159,25 @@ class PaymentController extends Controller
 
     public function error()
     {
-        global $db;
-
         $rules = [
-            'log_id' => ['required', 'string']
+            'order_id' => ['required', 'string']
         ];
         $validator = new Validator($_GET, $rules);
 
         if (!$validator->validate()) {
+            info('Error Validation failed');
             Redirect::to($GLOBALS['config']->get('app')['url']);
         }
 
         $input = $validator->sanitized();
 
-        $logId = $input['log_id'];
-        $error_code = null;
-        $error_description = null;
-        $payment_details = null;
+        $transactionData = (new PaymentProcessor)->getTransactionDetails($input['order_id']);
 
-        if ($logId) {
-            // Fetch the log entry
-            $sql = "SELECT data FROM cc_payment_logs WHERE id = :id";
-            $log = $db->query($sql, ['id' => $logId])->find();
-
-            if ($log) {
-                $logData = json_decode($log['data'], true);
-                $error_code = $logData['status_code'] ?? null;
-                $error_description = $logData['failure_message'] ?? null;
-                $payment_details = $logData['details'] ?? null;
-            }
+        if (!$transactionData) {
+            info('Transaction Not found in error');
+            Redirect::to($GLOBALS['config']->get('app')['url']);
         }
-        $this->view('pages.error', [
-            'error_code' => $error_code,
-            'error_description' => $error_description,
-            'payment_details' => $payment_details
-        ]);
+
+        $this->view('pages.error', $transactionData);
     }
 }

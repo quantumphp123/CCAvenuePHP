@@ -111,7 +111,6 @@ class PaymentProcessor
 
     private function parseResponseString($responseString)
     {
-        info("Parsing Response String...");
         $responseData = [];
         $pairs = explode('&', $responseString);
 
