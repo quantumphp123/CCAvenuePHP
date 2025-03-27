@@ -86,7 +86,8 @@ class PaymentProcessor
         return url('/ccav-response-handler');
     }
 
-    private function getCancelUrl(){
+    private function getCancelUrl()
+    {
         return url('/ccav-response-handler');
     }
 
@@ -181,7 +182,9 @@ class PaymentProcessor
             'transaction_fee' => $data['trans_fee'] ?? null,
             'service_tax' => $data['service_tax'] ?? null,
             'error_message' => $this->getErrorMessage($data),
-            'transaction_time' => DateTime::createFromFormat('m/d/Y H:i:s', $data['trans_date'])->format('Y-m-d H:i:s') ?? date('Y-m-d H:i:s')
+            'transaction_time' => DateTime::createFromFormat('d/m/Y H:i:s', $data['trans_date'])
+                    ?->format('Y-m-d H:i:s')
+                ?? date('Y-m-d H:i:s')
         ];
 
     }

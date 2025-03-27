@@ -27,23 +27,27 @@ include VIEW_PATH . 'layouts/layout.php';
                     <div class="grid grid-cols-2 gap-6">
                         <div>
                             <p class="text-sm text-gray-500">Order ID</p>
-                            <p class="font-mono text-sm"><?php echo htmlspecialchars($data['transaction']['order_id']); ?>
+                            <p class="font-mono text-sm text-wrap">
+                                <?php echo htmlspecialchars($data['transaction']['order_id']); ?>
                             </p>
                         </div>
                         <div>
                             <p class="text-sm text-gray-500">Transaction ID</p>
-                            <p class="font-mono text-sm"><?php echo htmlspecialchars($data['transaction']['payment_id']); ?>
+                            <p class="font-mono text-sm text-wrap">
+                                <?php echo htmlspecialchars($data['transaction']['payment_id']); ?>
                             </p>
                         </div>
                         <div>
                             <p class="text-sm text-gray-500">Bank Reference</p>
                             <p class="font-mono text-sm">
-                                <?php echo htmlspecialchars($data['transaction']['bank_ref_no']); ?></p>
+                                <?php echo htmlspecialchars($data['transaction']['bank_ref_no']); ?>
+                            </p>
                         </div>
                         <div>
                             <p class="text-sm text-gray-500">Transaction Date</p>
                             <p class="font-mono text-sm">
-                                <?php echo date('d M Y, h:i A', strtotime($data['transaction']['transaction_time'])); ?></p>
+                                <?php echo date('d M Y, h:i A', strtotime($data['transaction']['transaction_time'])); ?>
+                            </p>
                         </div>
                     </div>
                 </div>
